@@ -4,6 +4,10 @@
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 
+#include "class_loader/class_loader.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "rclcpp_components/node_factory.hpp"
+
 #include "rclcpp_lua/visibility_control.h"
 
 namespace rclcpp_lua {

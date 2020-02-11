@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <memory>
 #include <utility>
+#include <vector>
 
 namespace test {
 using namespace std::chrono_literals;
@@ -49,12 +50,53 @@ SOL_DERIVED_CLASSES(rclcpp::Node, test::Talker);
 
 namespace rclcpp_lua {
 
+class Loader {
+ public:
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr load_library(
+      const std::string& library_path, const std::string& class_name,
+      const rclcpp::NodeOptions& options) {
+    auto logger = rclcpp::get_logger("Loader");
+    auto loader = std::make_shared<class_loader::ClassLoader>(library_path);
+    loaders_.push_back(loader);
+    auto classes =
+        loader->getAvailableClasses<rclcpp_components::NodeFactory>();
+    for (auto clazz : classes) {
+      RCLCPP_INFO(logger, "Instantiate class %s", clazz.c_str());
+      auto node_factory = loader->createInstance<rclcpp_components::NodeFactory>(clazz);
+      auto wrapper = node_factory->create_node_instance(options);
+      node_wrappers_.push_back(wrapper);
+      auto node = wrapper.get_node_base_interface();
+      return node;
+    }
+
+    // auto node_factory =
+    //     loader->createInstance<rclcpp_components::NodeFactory>(class_name);
+
+    // auto wrapper = node_factory->create_node_instance(options);
+    // node_wrappers_.push_back(wrapper);
+    // auto node = wrapper.get_node_base_interface();
+    // return node;
+  }
+
+ private:
+  std::vector<std::shared_ptr<class_loader::ClassLoader>> loaders_;
+  std::vector<rclcpp_components::NodeInstanceWrapper> node_wrappers_;
+};
+
 sol::table register_rclcpp_lua(sol::this_state L) {
   sol::state_view lua(L);
   sol::table module = lua.create_table();
 
   module.set_function("init", []() { rclcpp::init(0, nullptr); });
   module.set_function("shutdown", []() { rclcpp::shutdown(); });
+
+  sol::usertype<Loader> loader = module.new_usertype<Loader>(
+      "Loader", "load_library", &Loader::load_library);
+
+  sol::usertype<rclcpp::node_interfaces::NodeBaseInterface>
+      node_base_interface =
+          module.new_usertype<rclcpp::node_interfaces::NodeBaseInterface>(
+              "NodeBaseInterface", sol::no_constructor);
 
   sol::usertype<rclcpp::Node> node = module.new_usertype<rclcpp::Node>("Node");
   node["five"] = [](const rclcpp::Node& node) { return 5; };
@@ -71,19 +113,19 @@ sol::table register_rclcpp_lua(sol::this_state L) {
       &rclcpp::executors::SingleThreadedExecutor::spin;
   // [](rclcpp::executors::SingleThreadedExecutor& exec) { exec.spin(); };
 
-  single_threaded_executor["add_node"] =
+  single_threaded_executor["add_node"] = sol::overload(
       [](rclcpp::executors::SingleThreadedExecutor& exec,
          std::shared_ptr<rclcpp::Node> node_ptr,
-         bool notify = true) { exec.add_node(node_ptr, notify); };
+         bool notify = true) { exec.add_node(node_ptr, notify); },
+      [](rclcpp::executors::SingleThreadedExecutor& exec,
+         std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_ptr,
+         bool notify = true) { exec.add_node(node_ptr, notify); });
 
   module["executors"] = executors;
 
   sol::table test = lua.create_table();
   sol::usertype<test::Talker> talker = test.new_usertype<test::Talker>(
-      "Talker",
-      //  sol::constructors<test::Talker(const rclcpp::NodeOptions&)>(),
-      sol::factories([](rclcpp::NodeOptions& options) {
-        std::cout << "factory" << std::endl;
+      "Talker", sol::factories([](rclcpp::NodeOptions& options) {
         return std::make_shared<test::Talker>(options);
       }),
       sol::base_classes, sol::bases<rclcpp::Node>());

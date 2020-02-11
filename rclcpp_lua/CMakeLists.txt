@@ -18,6 +18,8 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_ros REQUIRED)
 find_package(rclcpp)
+find_package(rclcpp_components)
+find_package(class_loader)
 find_package(std_msgs)
 find_package(Lua 5.3 REQUIRED)
 find_package(sol2 REQUIRED)
@@ -28,7 +30,11 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<INSTALL_INTERFACE:include> ${LUA_INCLUDE_DIR})
 target_link_libraries(rclcpp_lua sol2::sol2 ${LUA_LIBRARIES})
-ament_target_dependencies(rclcpp_lua rclcpp std_msgs)
+ament_target_dependencies(rclcpp_lua
+                          rclcpp
+                          rclcpp_components
+                          class_loader
+                          std_msgs)
 ament_environment_hooks(env_hook/rclcpp_lua.sh.in)
 
 # Causes the visibility macros to use dllexport rather than dllimport, which is

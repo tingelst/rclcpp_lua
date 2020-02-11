@@ -1,19 +1,16 @@
 #ifndef RCLCPP_LUA__RCLCPP_LUA_HPP_
 #define RCLCPP_LUA__RCLCPP_LUA_HPP_
 
+#define SOL_ALL_SAFETIES_ON 1
+#include <sol/sol.hpp>
+
 #include "rclcpp_lua/visibility_control.h"
 
-namespace rclcpp_lua
-{
+namespace rclcpp_lua {
+sol::table register_rclcpp_lua(sol::this_state L);
 
-class RclcppLua
-{
-public:
-  RclcppLua();
+} 
 
-  virtual ~RclcppLua();
-};
-
-}  // namespace rclcpp_lua
+extern "C" RCLCPP_LUA_PUBLIC int luaopen_librclcpp_lua(lua_State* L);
 
 #endif  // RCLCPP_LUA__RCLCPP_LUA_HPP_

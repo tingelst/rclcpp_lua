@@ -4,10 +4,18 @@
   <name>rclcpp_lua</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="lars.tingelstad@ntnu.no">lars</maintainer>
-  <license>TODO: License declaration</license>
+  <maintainer email="lars.tingelstad@ntnu.no">Lars Tingelstad</maintainer>
+  <license>Apache License 2.0</license>
+
+  <author email="lars.tingelstad@ntnu.no">Lars Tingelstad</author>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
+
+  <depend>sol2</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_lifecycle</depend>
+  <depend>rclcpp_components</depend>
+  <depend>std_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

@@ -1,0 +1,5 @@
+repositories:
+  sol2:
+    type: git
+    url: https://github.com/ThePhD/sol2.git
+    version: develop

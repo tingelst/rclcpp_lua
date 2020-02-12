@@ -18,9 +18,11 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_ros REQUIRED)
 find_package(rclcpp)
+find_package(rclcpp_lifecycle)
 find_package(rclcpp_components)
 find_package(class_loader)
 find_package(std_msgs)
+find_package(sensor_msgs)
 find_package(Lua 5.3 REQUIRED)
 find_package(sol2 REQUIRED)
 
@@ -32,21 +34,41 @@ target_include_directories(
 target_link_libraries(rclcpp_lua sol2::sol2 ${LUA_LIBRARIES})
 ament_target_dependencies(rclcpp_lua
                           rclcpp
+                          rclcpp_lifecycle
                           rclcpp_components
                           class_loader
-                          std_msgs)
-ament_environment_hooks(env_hook/rclcpp_lua.sh.in)
+                          std_msgs
+                          sensor_msgs)
 
 # Causes the visibility macros to use dllexport rather than dllimport, which is
 # appropriate when building the dll but not consuming it.
 target_compile_definitions(rclcpp_lua PRIVATE "RCLCPP_LUA_BUILDING_LIBRARY")
 
+add_executable(load_script src/load_script.cpp)
+target_include_directories(
+  load_script
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+         $<INSTALL_INTERFACE:include> ${LUA_INCLUDE_DIR})
+target_link_libraries(load_script sol2::sol2 ${LUA_LIBRARIES})
+ament_target_dependencies(load_script
+                          rclcpp
+                          rclcpp_lifecycle
+                          rclcpp_components
+                          class_loader
+                          std_msgs
+                          sensor_msgs)
+
+ament_environment_hooks(env_hook/rclcpp_lua.sh.in)
+
 install(DIRECTORY include/ DESTINATION include)
+
 install(TARGETS rclcpp_lua
         EXPORT export_${PROJECT_NAME}
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         RUNTIME DESTINATION bin)
+
+install(TARGETS load_script DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY scripts DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)

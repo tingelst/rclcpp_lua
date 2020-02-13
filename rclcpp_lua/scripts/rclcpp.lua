@@ -1,3 +1,19 @@
+-- require("context")
+-- require("geometric")
+
+-- local u = UrdfExpr()
+-- u:readFromFile(
+--     "/home/lars/etasl_ros2_control_ws/install/kuka_kr6_support/share/kuka_kr6_support/urdf/kr6r900sixx.urdf")
+-- u:addTransform("ee", "tool0", "base_link")
+
+-- local r = u:getExpressions(ctx)
+
+require("libexpressiongraph_context_lua")
+ctx=Context()
+ctx:addType("robot")
+ctx:addType("feature")
+time = ctx:getScalarExpr("time")
+
 local rclcpp = require('librclcpp_lua')
 
 -- rclcpp.init()
@@ -12,6 +28,8 @@ local options = rclcpp.NodeOptions.new()
 
 local talker = loader:load_library('/opt/ros/eloquent/lib/libtalker_component.so', 'composition::Talker', options)
 local listener = loader:load_library('/opt/ros/eloquent/lib/liblistener_component.so', 'composition::Listener', options)
+
+
 
 local lifecycle_options = rclcpp.NodeOptions.new():use_intra_process_comms(true)
 local lifecycle_controller = rclcpp.LifecycleController.new(lifecycle_options)

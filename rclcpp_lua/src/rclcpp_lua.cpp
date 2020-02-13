@@ -48,7 +48,7 @@ class LifecycleController : public rclcpp_lifecycle::LifecycleNode {
              msg->data, reinterpret_cast<uintptr_t>(msg.get()));
       pub_ptr->publish(std::move(msg));
     };
-    timer_ = this->create_wall_timer(4ms, callback);
+    timer_ = this->create_wall_timer(1s, callback);
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::
         CallbackReturn::SUCCESS;
   }

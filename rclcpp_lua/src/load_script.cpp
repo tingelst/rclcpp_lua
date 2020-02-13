@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
 
   sol::state lua;
   // open some common libraries
-  lua.open_libraries(sol::lib::base, sol::lib::package);
+  lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::string);
 
   rclcpp::init(argc, argv);
 
@@ -21,8 +21,8 @@ int main(int argc, char* argv[]) {
   lua["etasl"] = etasl;
 
   lua.script_file(
-      "/home/lars/rclcpp_lua_ws/install/rclcpp_lua/share/rclcpp_lua/scripts/"
-      "rclcpp.lua");
+      "/home/lars/etasl_ros2_control_ws/install/rclcpp_lua/share/rclcpp_lua/"
+      "scripts/rclcpp.lua");
 
   //   rclcpp::executors::SingleThreadedExecutor executor;
   //   auto producer = std::make_shared<Producer>("producer", "number");

@@ -6,9 +6,6 @@
 #include <std_msgs/msg/float64.hpp>
 #include "std_msgs/msg/string.hpp"
 
-#include <kuka_rsi_hardware/kuka_rsi_hardware.hpp>
-#include "controller_manager/controller_manager.hpp"
-
 #include <chrono>
 #include <cinttypes>
 
@@ -34,7 +31,8 @@ class LifecycleController : public rclcpp_lifecycle::LifecycleNode {
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
   on_configure(const rclcpp_lifecycle::State& state) {
     // Create a publisher on the output topic.
-    pub_ = this->create_publisher<std_msgs::msg::Float64>(output_topic_, 10);
+    rclcpp::QoS qos(rclcpp::KeepLast(7));
+    pub_ = this->create_publisher<std_msgs::msg::Float64>(output_topic_, qos);
     std::weak_ptr<std::remove_pointer<decltype(pub_.get())>::type>
         captured_pub = pub_;
     // Create a timer which publishes on the output topic at ~1Hz.
@@ -47,8 +45,9 @@ class LifecycleController : public rclcpp_lifecycle::LifecycleNode {
       std_msgs::msg::Float64::UniquePtr msg =
           std::make_unique<std_msgs::msg::Float64>();
       msg->data = 0.1 * std::sin(this->get_clock()->now().nanoseconds());
-      printf("Published message with value: %f, and address: 0x%" PRIXPTR "\n",
-             msg->data, reinterpret_cast<uintptr_t>(msg.get()));
+      RCLCPP_INFO(this->get_logger(),
+                  "Published message with and address: 0x%" PRIXPTR,
+                  reinterpret_cast<uintptr_t>(msg.get()));
       pub_ptr->publish(std::move(msg));
     };
     timer_ = this->create_wall_timer(1s, callback);
@@ -87,7 +86,8 @@ struct Controller : public rclcpp::Node {
   Controller(const std::string& name, const std::string& output)
       : Node(name, rclcpp::NodeOptions().use_intra_process_comms(true)) {
     // Create a publisher on the output topic.
-    pub_ = this->create_publisher<std_msgs::msg::Float64>(output, 10);
+    rclcpp::QoS qos(rclcpp::KeepLast(7));
+    pub_ = this->create_publisher<std_msgs::msg::Float64>(output, qos);
     std::weak_ptr<std::remove_pointer<decltype(pub_.get())>::type>
         captured_pub = pub_;
     // Create a timer which publishes on the output topic at ~1Hz.
@@ -100,8 +100,9 @@ struct Controller : public rclcpp::Node {
       std_msgs::msg::Float64::UniquePtr msg =
           std::make_unique<std_msgs::msg::Float64>();
       msg->data = 0.1 * std::sin(this->get_clock()->now().nanoseconds());
-      printf("Published message with value: %f, and address: 0x%" PRIXPTR "\n",
-             msg->data, reinterpret_cast<uintptr_t>(msg.get()));
+      RCLCPP_INFO(this->get_logger(),
+                  "Published message with and address: 0x%" PRIXPTR,
+                  reinterpret_cast<uintptr_t>(msg.get()));
       pub_ptr->publish(std::move(msg));
     };
     timer_ = this->create_wall_timer(4ms, callback);
@@ -111,34 +112,55 @@ struct Controller : public rclcpp::Node {
   rclcpp::TimerBase::SharedPtr timer_;
 };
 
-// Node that consumes messages.
-struct Consumer : public rclcpp::Node {
-  Consumer(const std::string& name, const std::string& input)
+struct JointStatePublisher : public rclcpp::Node {
+  JointStatePublisher(const std::string& name, const std::string& input,
+                      const std::string& output)
       : Node(name, rclcpp::NodeOptions().use_intra_process_comms(true)) {
     joint_states_node_ =
         rclcpp::Node::make_shared("joint_states_node", rclcpp::NodeOptions());
 
-    joint_states_ = std::make_unique<sensor_msgs::msg::JointState>();
-    joint_states_->name.push_back("joint1");
-    joint_states_->position.push_back(0.0);
-
-    rclcpp::QoS qos = rclcpp::SystemDefaultsQoS();
+    rclcpp::QoS qos(rclcpp::KeepLast(7));
     pub_ = joint_states_node_->create_publisher<sensor_msgs::msg::JointState>(
-        "joint_states2", qos);
+        output, qos);
 
-    // Create a subscription on the input topic which prints on receipt of new
-    // messages.
+    sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
+        input, 10, [this](const sensor_msgs::msg::JointState::SharedPtr msg) {
+          RCLCPP_INFO(this->get_logger(),
+                      "Received message with address: 0x%" PRIXPTR,
+                      reinterpret_cast<std::uintptr_t>(msg.get()));
+
+          // sensor_msgs::msg::JointState out = msg;
+          // pub_->publish(msg);
+        });
+  }
+
+  sensor_msgs::msg::JointState::UniquePtr joint_states_;
+  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr sub_;
+  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr pub_;
+  rclcpp::Node::SharedPtr joint_states_node_;
+};
+
+// Node that consumes messages.
+struct Driver : public rclcpp::Node {
+  Driver(const std::string& name, const std::string& input,
+         const std::string& output)
+      : Node(name, rclcpp::NodeOptions().use_intra_process_comms(true)) {
+    rclcpp::QoS qos(rclcpp::KeepLast(7));
+    pub_ = this->create_publisher<sensor_msgs::msg::JointState>(output, qos);
     sub_ = this->create_subscription<std_msgs::msg::Float64>(
         input, 10, [this](std_msgs::msg::Float64::UniquePtr msg) {
-          printf(" Received message with value: %f, and address: 0x%" PRIXPTR
-                 "\n",
-                 msg->data, reinterpret_cast<std::uintptr_t>(msg.get()));
+          RCLCPP_INFO(this->get_logger(),
+                      "Received message with address: 0x%" PRIXPTR,
+                      reinterpret_cast<std::uintptr_t>(msg.get()));
 
-          sensor_msgs::msg::JointState out;
-          out.header.stamp = this->get_clock()->now();
-          out.name.push_back("joint1");
-          out.position.push_back(msg->data);
-          pub_->publish(out);
+          joint_states_ = std::make_unique<sensor_msgs::msg::JointState>();
+          joint_states_->header.stamp = this->get_clock()->now();
+          joint_states_->name.push_back("joint1");
+          joint_states_->position.push_back(msg->data);
+          RCLCPP_INFO(this->get_logger(),
+                      "Published message with address: 0x%" PRIXPTR,
+                      reinterpret_cast<uintptr_t>(joint_states_.get()));
+          pub_->publish(std::move(joint_states_));
         });
   }
 
@@ -182,11 +204,11 @@ class Talker : public rclcpp::Node {
 
 }  // namespace test
 
-SOL_BASE_CLASSES(kuka_rsi_hardware::KukaRsiHardware,
-                 hardware_interface::RobotHardware);
+// SOL_BASE_CLASSES(kuka_rsi_hardware::KukaRsiHardware,
+//                  hardware_interface::RobotHardware);
 
-SOL_DERIVED_CLASSES(hardware_interface::RobotHardware,
-                    kuka_rsi_hardware::KukaRsiHardware);
+// SOL_DERIVED_CLASSES(hardware_interface::RobotHardware,
+//                     kuka_rsi_hardware::KukaRsiHardware);
 
 SOL_BASE_CLASSES(rclcpp::executors::SingleThreadedExecutor,
                  rclcpp::executor::Executor);
@@ -199,10 +221,12 @@ SOL_DERIVED_CLASSES(rclcpp::executor::Executor,
                     rclcpp::executors::MultiThreadedExecutor);
 
 SOL_BASE_CLASSES(test::Talker, rclcpp::Node);
-SOL_BASE_CLASSES(test::Consumer, rclcpp::Node);
+SOL_BASE_CLASSES(test::JointStatePublisher, rclcpp::Node);
+SOL_BASE_CLASSES(test::Driver, rclcpp::Node);
+
 SOL_BASE_CLASSES(test::Controller, rclcpp::Node);
-SOL_DERIVED_CLASSES(rclcpp::Node, test::Talker, test::Consumer,
-                    test::Controller);
+SOL_DERIVED_CLASSES(rclcpp::Node, test::Talker, test::Driver, test::Controller,
+                    test::JointStatePublisher);
 
 namespace rclcpp_lua {
 
@@ -247,30 +271,30 @@ sol::table register_rclcpp_lua(sol::this_state L) {
   module.set_function("init", []() { rclcpp::init(0, nullptr); });
   module.set_function("shutdown", []() { rclcpp::shutdown(); });
 
-  module.new_usertype<hardware_interface::RobotHardware>("RobotHardware");
+  // module.new_usertype<hardware_interface::RobotHardware>("RobotHardware");
 
-  module.new_usertype<kuka_rsi_hardware::KukaRsiHardware>(
-      "KukaRsiHardware", sol::factories([]() {
-        return std::make_shared<kuka_rsi_hardware::KukaRsiHardware>();
-      }),
-      "init", &kuka_rsi_hardware::KukaRsiHardware::init, "read",
-      &kuka_rsi_hardware::KukaRsiHardware::read, "write",
-      &kuka_rsi_hardware::KukaRsiHardware::write, sol::base_classes,
-      sol::bases<hardware_interface::RobotHardware>());
+  // module.new_usertype<kuka_rsi_hardware::KukaRsiHardware>(
+  //     "KukaRsiHardware", sol::factories([]() {
+  //       return std::make_shared<kuka_rsi_hardware::KukaRsiHardware>();
+  //     }),
+  //     "init", &kuka_rsi_hardware::KukaRsiHardware::init, "read",
+  //     &kuka_rsi_hardware::KukaRsiHardware::read, "write",
+  //     &kuka_rsi_hardware::KukaRsiHardware::write, sol::base_classes,
+  //     sol::bases<hardware_interface::RobotHardware>());
 
-  module.new_usertype<controller_manager::ControllerManager>(
-      "ControllerManager",
-      sol::factories(
-          [](std::shared_ptr<hardware_interface::RobotHardware> hw,
-             std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor,
-             const std::string& name) {
-            return std::make_shared<controller_manager::ControllerManager>(
-                hw, executor, name);
-          }),
-      "load_controller",
-      &controller_manager::ControllerManager::load_controller, "configure",
-      &controller_manager::ControllerManager::configure, "activate",
-      &controller_manager::ControllerManager::activate);
+  // module.new_usertype<controller_manager::ControllerManager>(
+  //     "ControllerManager",
+  //     sol::factories(
+  //         [](std::shared_ptr<hardware_interface::RobotHardware> hw,
+  //            std::shared_ptr<rclcpp::executors::MultiThreadedExecutor>
+  //            executor, const std::string& name) {
+  //           return std::make_shared<controller_manager::ControllerManager>(
+  //               hw, executor, name);
+  //         }),
+  //     "load_controller",
+  //     &controller_manager::ControllerManager::load_controller, "configure",
+  //     &controller_manager::ControllerManager::configure, "activate",
+  //     &controller_manager::ControllerManager::activate);
 
   module.new_usertype<test::LifecycleController>(
       "LifecycleController",
@@ -289,10 +313,19 @@ sol::table register_rclcpp_lua(sol::this_state L) {
       }),
       sol::base_classes, sol::bases<rclcpp::Node>());
 
-  module.new_usertype<test::Consumer>(
-      "Consumer",
-      sol::factories([](const std::string& name, const std::string& input) {
-        return std::make_shared<test::Consumer>(name, input);
+  module.new_usertype<test::JointStatePublisher>(
+      "JointStatePublisher",
+      sol::factories([](const std::string& name, const std::string& input,
+                        const std::string& output) {
+        return std::make_shared<test::JointStatePublisher>(name, input, output);
+      }),
+      sol::base_classes, sol::bases<rclcpp::Node>());
+
+  module.new_usertype<test::Driver>(
+      "Driver",
+      sol::factories([](const std::string& name, const std::string& input,
+                        const std::string& output) {
+        return std::make_shared<test::Driver>(name, input, output);
       }),
       sol::base_classes, sol::bases<rclcpp::Node>());
 

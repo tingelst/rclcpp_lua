@@ -45,10 +45,6 @@ ament_target_dependencies(rclcpp_lua
                           class_loader
                           std_msgs
                           sensor_msgs
-                          controller_interface
-                          controller_manager
-                          hardware_interface
-                          kuka_rsi_hw_interface
                           )
 
 # Causes the visibility macros to use dllexport rather than dllimport, which is
@@ -68,10 +64,6 @@ ament_target_dependencies(load_script
                           class_loader
                           std_msgs
                           sensor_msgs
-                          controller_interface
-                          controller_manager
-                          hardware_interface
-                          kuka_rsi_hw_interface
                           )
 
 ament_environment_hooks(env_hook/rclcpp_lua.sh.in)

@@ -1,41 +1,57 @@
-require("libexpressiongraph_context_lua")
-ctx=Context()
-ctx:addType("robot")
-ctx:addType("feature")
-time = ctx:getScalarExpr("time")
-
-
 local rclcpp = require('librclcpp_lua')
 
--- rclcpp.init()
+-- local exec = get_executor()
 
-local loader = rclcpp.Loader.new()
 
--- local exec = rclcpp.executors.SingleThreadedExecutor.new()
+-- print(exec)
 
-local exec = etasl.exec
+-- local loader = rclcpp.Loader.new()
 
-local options = rclcpp.NodeOptions.new()
+robot = rclcpp.KukaRsiHardware.new()
+robot:init()
 
-local talker = loader:load_library('/opt/ros/eloquent/lib/libtalker_component.so', 'composition::Talker', options)
-local listener = loader:load_library('/opt/ros/eloquent/lib/liblistener_component.so', 'composition::Listener', options)
+-- exec = rclcpp.executors.MultiThreadedExecutor.new()
 
-local lifecycle_options = rclcpp.NodeOptions.new():use_intra_process_comms(true)
-local lifecycle_controller = rclcpp.LifecycleController.new(lifecycle_options)
+print(exec)
+-- print(robot)
 
-local topic = 'command'
+cm = rclcpp.ControllerManager.new(robot, exec, "controller_manager");
+cm:load_controller("ros_controllers", "ros_controllers::JointStateController", "joint_state_controller");
+-- -- etasl_ros_controller = cm:load_controller(
+-- --       "etasl_ros2_controllers", "etasl_ros2_controllers::EtaslRos2Controller", "etasl_ros2_controller");
+
+-- -- start exec async spin
+
+-- cm:configure()
+-- cm:activate()
+
+
+
+
+
+-- local exec = etasl.exec
+
+-- local options = rclcpp.NodeOptions.new()
+
+-- local talker = loader:load_library('/opt/ros/eloquent/lib/libtalker_component.so', 'composition::Talker', options)
+-- local listener = loader:load_library('/opt/ros/eloquent/lib/liblistener_component.so', 'composition::Listener', options)
+
+-- local lifecycle_options = rclcpp.NodeOptions.new():use_intra_process_comms(true)
+-- local lifecycle_controller = rclcpp.LifecycleController.new(lifecycle_options)
+
+-- local topic = 'command'
 -- local controller = rclcpp.Controller.new("controller", topic)
 
-local driver = rclcpp.Consumer.new("consumer", topic)
+-- local driver = rclcpp.Consumer.new("consumer", topic)
 
-exec:add_node(lifecycle_controller:get_node_base_interface(), true)
+-- exec:add_node(lifecycle_controller:get_node_base_interface(), true)
 -- exec:add_node(controller:get_node_base_interface(), true)
-exec:add_node(driver:get_node_base_interface(), true)
+-- exec:add_node(driver:get_node_base_interface(), true)
 
-print("added nodes to exec")
+-- print("added nodes to exec")
 
-lifecycle_controller:configure()
-lifecycle_controller:activate()
+-- lifecycle_controller:configure()
+-- lifecycle_controller:activate()
 
 
 -- exec:add_node(talker, true)
@@ -43,6 +59,6 @@ lifecycle_controller:activate()
 
 
 
-exec:spin()
+-- exec:spin()
 
 -- rclcpp.shutdown()

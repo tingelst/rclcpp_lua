@@ -6,6 +6,9 @@
 #include <std_msgs/msg/float64.hpp>
 #include "std_msgs/msg/string.hpp"
 
+#include <kuka_rsi_hardware/kuka_rsi_hardware.hpp>
+#include "controller_manager/controller_manager.hpp"
+
 #include <chrono>
 #include <cinttypes>
 
@@ -179,6 +182,22 @@ class Talker : public rclcpp::Node {
 
 }  // namespace test
 
+SOL_BASE_CLASSES(kuka_rsi_hardware::KukaRsiHardware,
+                 hardware_interface::RobotHardware);
+
+SOL_DERIVED_CLASSES(hardware_interface::RobotHardware,
+                    kuka_rsi_hardware::KukaRsiHardware);
+
+SOL_BASE_CLASSES(rclcpp::executors::SingleThreadedExecutor,
+                 rclcpp::executor::Executor);
+
+SOL_BASE_CLASSES(rclcpp::executors::MultiThreadedExecutor,
+                 rclcpp::executor::Executor);
+
+SOL_DERIVED_CLASSES(rclcpp::executor::Executor,
+                    rclcpp::executors::SingleThreadedExecutor,
+                    rclcpp::executors::MultiThreadedExecutor);
+
 SOL_BASE_CLASSES(test::Talker, rclcpp::Node);
 SOL_BASE_CLASSES(test::Consumer, rclcpp::Node);
 SOL_BASE_CLASSES(test::Controller, rclcpp::Node);
@@ -228,6 +247,31 @@ sol::table register_rclcpp_lua(sol::this_state L) {
   module.set_function("init", []() { rclcpp::init(0, nullptr); });
   module.set_function("shutdown", []() { rclcpp::shutdown(); });
 
+  module.new_usertype<hardware_interface::RobotHardware>("RobotHardware");
+
+  module.new_usertype<kuka_rsi_hardware::KukaRsiHardware>(
+      "KukaRsiHardware", sol::factories([]() {
+        return std::make_shared<kuka_rsi_hardware::KukaRsiHardware>();
+      }),
+      "init", &kuka_rsi_hardware::KukaRsiHardware::init, "read",
+      &kuka_rsi_hardware::KukaRsiHardware::read, "write",
+      &kuka_rsi_hardware::KukaRsiHardware::write, sol::base_classes,
+      sol::bases<hardware_interface::RobotHardware>());
+
+  module.new_usertype<controller_manager::ControllerManager>(
+      "ControllerManager",
+      sol::factories(
+          [](std::shared_ptr<hardware_interface::RobotHardware> hw,
+             std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor,
+             const std::string& name) {
+            return std::make_shared<controller_manager::ControllerManager>(
+                hw, executor, name);
+          }),
+      "load_controller",
+      &controller_manager::ControllerManager::load_controller, "configure",
+      &controller_manager::ControllerManager::configure, "activate",
+      &controller_manager::ControllerManager::activate);
+
   module.new_usertype<test::LifecycleController>(
       "LifecycleController",
       sol::factories([](const rclcpp::NodeOptions& options) {
@@ -276,19 +320,47 @@ sol::table register_rclcpp_lua(sol::this_state L) {
               }));
 
   sol::table executors = lua.create_table();
+  sol::usertype<rclcpp::executor::Executor> executor =
+      executors.new_usertype<rclcpp::executor::Executor>("Executor");
+
   sol::usertype<rclcpp::executors::SingleThreadedExecutor>
       single_threaded_executor =
           executors.new_usertype<rclcpp::executors::SingleThreadedExecutor>(
-              "SingleThreadedExecutor");
+              "SingleThreadedExecutor", sol::factories([]() {
+                return std::make_shared<
+                    rclcpp::executors::SingleThreadedExecutor>();
+              }));
   single_threaded_executor["spin"] =
       &rclcpp::executors::SingleThreadedExecutor::spin;
   // [](rclcpp::executors::SingleThreadedExecutor& exec) { exec.spin(); };
-
   single_threaded_executor["add_node"] = sol::overload(
       [](rclcpp::executors::SingleThreadedExecutor& exec,
          std::shared_ptr<rclcpp::Node> node_ptr,
          bool notify = true) { exec.add_node(node_ptr, notify); },
       [](rclcpp::executors::SingleThreadedExecutor& exec,
+         std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_ptr,
+         bool notify = true) { exec.add_node(node_ptr, notify); });
+
+  sol::usertype<rclcpp::executors::MultiThreadedExecutor>
+      multi_threaded_executor = executors.new_usertype<
+          rclcpp::executors::MultiThreadedExecutor>(
+          "MultiThreadedExecutor", sol::factories([]() {
+            return std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
+          }));
+  multi_threaded_executor["spin"] =
+      &rclcpp::executors::MultiThreadedExecutor::spin;
+
+  lua["async_spin"] =
+      [&](std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor) {
+        auto spin_executor = [&executor]() { executor->spin(); };
+        std::thread execution_thread(spin_executor);
+      };
+
+  multi_threaded_executor["add_node"] = sol::overload(
+      [](rclcpp::executors::MultiThreadedExecutor& exec,
+         std::shared_ptr<rclcpp::Node> node_ptr,
+         bool notify = true) { exec.add_node(node_ptr, notify); },
+      [](rclcpp::executors::MultiThreadedExecutor& exec,
          std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_ptr,
          bool notify = true) { exec.add_node(node_ptr, notify); });
 
@@ -303,7 +375,7 @@ sol::table register_rclcpp_lua(sol::this_state L) {
   module["test"] = test;
 
   return module;
-}
+}  // namespace rclcpp_lua
 
 }  // namespace rclcpp_lua
 

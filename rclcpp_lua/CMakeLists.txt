@@ -23,6 +23,12 @@ find_package(rclcpp_components)
 find_package(class_loader)
 find_package(std_msgs)
 find_package(sensor_msgs)
+find_package(controller_interface)
+find_package(controller_manager)
+find_package(hardware_interface)
+find_package(kuka_rsi_hw_interface)
+
+
 find_package(Lua 5.3 REQUIRED)
 find_package(sol2 REQUIRED)
 
@@ -38,7 +44,12 @@ ament_target_dependencies(rclcpp_lua
                           rclcpp_components
                           class_loader
                           std_msgs
-                          sensor_msgs)
+                          sensor_msgs
+                          controller_interface
+                          controller_manager
+                          hardware_interface
+                          kuka_rsi_hw_interface
+                          )
 
 # Causes the visibility macros to use dllexport rather than dllimport, which is
 # appropriate when building the dll but not consuming it.
@@ -56,7 +67,12 @@ ament_target_dependencies(load_script
                           rclcpp_components
                           class_loader
                           std_msgs
-                          sensor_msgs)
+                          sensor_msgs
+                          controller_interface
+                          controller_manager
+                          hardware_interface
+                          kuka_rsi_hw_interface
+                          )
 
 ament_environment_hooks(env_hook/rclcpp_lua.sh.in)
 

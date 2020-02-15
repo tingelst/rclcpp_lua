@@ -26,6 +26,7 @@ class LifecycleController : public rclcpp_lifecycle::LifecycleNode {
       : LifecycleNode("LifecycleController",
                       rclcpp::NodeOptions().use_intra_process_comms(true)) {
     output_topic_ = this->declare_parameter("output_topic", "command");
+    input_topic_ = this->declare_parameter("input_topic", "state");
   }
 
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
@@ -46,11 +47,17 @@ class LifecycleController : public rclcpp_lifecycle::LifecycleNode {
           std::make_unique<std_msgs::msg::Float64>();
       msg->data = 0.1 * std::sin(this->get_clock()->now().nanoseconds());
       RCLCPP_INFO(this->get_logger(),
-                  "Published message with and address: 0x%" PRIXPTR,
+                  "Published command message with and address: 0x%" PRIXPTR,
                   reinterpret_cast<uintptr_t>(msg.get()));
       pub_ptr->publish(std::move(msg));
     };
     timer_ = this->create_wall_timer(1s, callback);
+    sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
+        input_topic_, 10, [this](const sensor_msgs::msg::JointState::SharedPtr msg) {
+          RCLCPP_INFO(this->get_logger(),
+                      "Received joint state message with address: 0x%" PRIXPTR,
+                      reinterpret_cast<std::uintptr_t>(msg.get()));
+        });
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::
         CallbackReturn::SUCCESS;
   }
@@ -76,8 +83,10 @@ class LifecycleController : public rclcpp_lifecycle::LifecycleNode {
         CallbackReturn::SUCCESS;
   }
 
+  std::string input_topic_;
   std::string output_topic_;
   rclcpp_lifecycle::LifecyclePublisher<std_msgs::msg::Float64>::SharedPtr pub_;
+  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr sub_;
   rclcpp::TimerBase::SharedPtr timer_;
 };
 
@@ -109,6 +118,7 @@ struct Controller : public rclcpp::Node {
   }
 
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr pub_;
+  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr sub_;
   rclcpp::TimerBase::SharedPtr timer_;
 };
 
@@ -126,10 +136,10 @@ struct JointStatePublisher : public rclcpp::Node {
     sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
         input, 10, [this](const sensor_msgs::msg::JointState::SharedPtr msg) {
           RCLCPP_INFO(this->get_logger(),
-                      "Received message with address: 0x%" PRIXPTR,
+                      "Received joint state message with address: 0x%" PRIXPTR,
                       reinterpret_cast<std::uintptr_t>(msg.get()));
 
-          // sensor_msgs::msg::JointState out = msg;
+          // sensor_msgs::msg::JointState out = *msg;
           // pub_->publish(msg);
         });
   }
@@ -150,7 +160,7 @@ struct Driver : public rclcpp::Node {
     sub_ = this->create_subscription<std_msgs::msg::Float64>(
         input, 10, [this](std_msgs::msg::Float64::UniquePtr msg) {
           RCLCPP_INFO(this->get_logger(),
-                      "Received message with address: 0x%" PRIXPTR,
+                      "Received command message with address: 0x%" PRIXPTR,
                       reinterpret_cast<std::uintptr_t>(msg.get()));
 
           joint_states_ = std::make_unique<sensor_msgs::msg::JointState>();
@@ -158,7 +168,7 @@ struct Driver : public rclcpp::Node {
           joint_states_->name.push_back("joint1");
           joint_states_->position.push_back(msg->data);
           RCLCPP_INFO(this->get_logger(),
-                      "Published message with address: 0x%" PRIXPTR,
+                      "Published joint state message with address: 0x%" PRIXPTR,
                       reinterpret_cast<uintptr_t>(joint_states_.get()));
           pub_->publish(std::move(joint_states_));
         });

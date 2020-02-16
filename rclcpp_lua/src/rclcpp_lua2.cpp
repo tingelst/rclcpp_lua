@@ -7,7 +7,7 @@
 #include "std_msgs/msg/string.hpp"
 
 #include "controller_manager/controller_manager.hpp"
-#include "kuka_rsi_hardware/kuka_rsi_hardware.hpp"
+// #include "kuka_rsi_hardware/kuka_rsi_hardware.hpp"
 
 #include <chrono>
 #include <cinttypes>
@@ -211,11 +211,11 @@ class Talker : public rclcpp::Node {
 
 }  // namespace test
 
-SOL_BASE_CLASSES(kuka_rsi_hardware::KukaRsiHardware,
-                 hardware_interface::RobotHardware);
+// SOL_BASE_CLASSES(kuka_rsi_hardware::KukaRsiHardware,
+//                  hardware_interface::RobotHardware);
 
-SOL_DERIVED_CLASSES(hardware_interface::RobotHardware,
-                    kuka_rsi_hardware::KukaRsiHardware);
+// SOL_DERIVED_CLASSES(hardware_interface::RobotHardware,
+//                     kuka_rsi_hardware::KukaRsiHardware);
 
 SOL_BASE_CLASSES(rclcpp::executors::SingleThreadedExecutor,
                  rclcpp::executor::Executor);
@@ -271,37 +271,36 @@ class Loader {
   std::vector<rclcpp_components::NodeInstanceWrapper> node_wrappers_;
 };
 
-sol::table register_rclcpp_lua(sol::this_state L) {
-  sol::state_view lua(L);
+void register_rclcpp_lua(sol::state_view lua) {
   sol::table module = lua.create_table();
 
   module.set_function("init", []() { rclcpp::init(0, nullptr); });
   module.set_function("shutdown", []() { rclcpp::shutdown(); });
 
-  module.new_usertype<hardware_interface::RobotHardware>("RobotHardware");
+  // module.new_usertype<hardware_interface::RobotHardware>("RobotHardware");
 
-  module.new_usertype<kuka_rsi_hardware::KukaRsiHardware>(
-      "KukaRsiHardware", sol::factories([]() {
-        return std::make_shared<kuka_rsi_hardware::KukaRsiHardware>();
-      }),
-      "init", &kuka_rsi_hardware::KukaRsiHardware::init, "read",
-      &kuka_rsi_hardware::KukaRsiHardware::read, "write",
-      &kuka_rsi_hardware::KukaRsiHardware::write, sol::base_classes,
-      sol::bases<hardware_interface::RobotHardware>());
+  // module.new_usertype<kuka_rsi_hardware::KukaRsiHardware>(
+  //     "KukaRsiHardware", sol::factories([]() {
+  //       return std::make_shared<kuka_rsi_hardware::KukaRsiHardware>();
+  //     }),
+  //     "init", &kuka_rsi_hardware::KukaRsiHardware::init, "read",
+  //     &kuka_rsi_hardware::KukaRsiHardware::read, "write",
+  //     &kuka_rsi_hardware::KukaRsiHardware::write, sol::base_classes,
+  //     sol::bases<hardware_interface::RobotHardware>());
 
-  module.new_usertype<controller_manager::ControllerManager>(
-      "ControllerManager",
-      sol::factories(
-          [](std::shared_ptr<hardware_interface::RobotHardware> hw,
-             std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor,
-             const std::string& name) {
-            return std::make_shared<controller_manager::ControllerManager>(
-                hw, executor, name);
-          }),
-      "load_controller",
-      &controller_manager::ControllerManager::load_controller, "configure",
-      &controller_manager::ControllerManager::configure, "activate",
-      &controller_manager::ControllerManager::activate);
+  // module.new_usertype<controller_manager::ControllerManager>(
+  //     "ControllerManager",
+  //     sol::factories(
+  //         [](std::shared_ptr<hardware_interface::RobotHardware> hw,
+  //            std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor,
+  //            const std::string& name) {
+  //           return std::make_shared<controller_manager::ControllerManager>(
+  //               hw, executor, name);
+  //         }),
+  //     "load_controller",
+  //     &controller_manager::ControllerManager::load_controller, "configure",
+  //     &controller_manager::ControllerManager::configure, "activate",
+  //     &controller_manager::ControllerManager::activate);
 
   module.new_usertype<test::LifecycleController>(
       "LifecycleController",
@@ -408,17 +407,10 @@ sol::table register_rclcpp_lua(sol::this_state L) {
       sol::base_classes, sol::bases<rclcpp::Node>());
   module["test"] = test;
 
-  return module;
+
+  lua["rclcpp"] = module;
+
+  // return module;
 }  
 
 }  // namespace rclcpp_lua
-
-extern "C" int luaopen_librclcpp_lua(lua_State* L) {
-  // pass the lua_State,
-  // the index to start grabbing arguments from,
-  // and the function itself
-  // optionally, you can pass extra arguments to the function if that's
-  // necessary, but that's advanced usage and is generally reserved for
-  // internals only
-  return sol::stack::call_lua(L, 1, rclcpp_lua::register_rclcpp_lua);
-}

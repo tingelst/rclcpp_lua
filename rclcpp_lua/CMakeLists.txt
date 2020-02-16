@@ -45,13 +45,17 @@ ament_target_dependencies(rclcpp_lua
                           class_loader
                           std_msgs
                           sensor_msgs
+                          controller_interface
+                          controller_manager
+                          hardware_interface
+                          kuka_rsi_hw_interface
                           )
 
 # Causes the visibility macros to use dllexport rather than dllimport, which is
 # appropriate when building the dll but not consuming it.
 target_compile_definitions(rclcpp_lua PRIVATE "RCLCPP_LUA_BUILDING_LIBRARY")
 
-add_executable(load_script src/load_script.cpp)
+add_executable(load_script src/rclcpp_lua2.cpp src/load_script.cpp)
 target_include_directories(
   load_script
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -64,6 +68,10 @@ ament_target_dependencies(load_script
                           class_loader
                           std_msgs
                           sensor_msgs
+                          controller_interface
+                          controller_manager
+                          hardware_interface
+                          # kuka_rsi_hw_interface
                           )
 
 ament_environment_hooks(env_hook/rclcpp_lua.sh.in)

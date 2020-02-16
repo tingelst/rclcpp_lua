@@ -13,6 +13,7 @@
 namespace rclcpp_lua {
 sol::table register_rclcpp_lua(sol::this_state L);
 
+
 } 
 
 extern "C" RCLCPP_LUA_PUBLIC int luaopen_librclcpp_lua(lua_State* L);

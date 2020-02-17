@@ -7,7 +7,7 @@
 #include "std_msgs/msg/string.hpp"
 
 #include "controller_manager/controller_manager.hpp"
-// #include "kuka_rsi_hardware/kuka_rsi_hardware.hpp"
+#include "kuka_rsi_hardware/kuka_rsi_hardware.hpp"
 
 #include <chrono>
 #include <cinttypes>
@@ -211,11 +211,11 @@ class Talker : public rclcpp::Node {
 
 }  // namespace test
 
-// SOL_BASE_CLASSES(kuka_rsi_hardware::KukaRsiHardware,
-//                  hardware_interface::RobotHardware);
+SOL_BASE_CLASSES(kuka_rsi_hardware::KukaRsiHardware,
+                 hardware_interface::RobotHardware);
 
-// SOL_DERIVED_CLASSES(hardware_interface::RobotHardware,
-//                     kuka_rsi_hardware::KukaRsiHardware);
+SOL_DERIVED_CLASSES(hardware_interface::RobotHardware,
+                    kuka_rsi_hardware::KukaRsiHardware);
 
 SOL_BASE_CLASSES(rclcpp::executors::SingleThreadedExecutor,
                  rclcpp::executor::Executor);
@@ -277,30 +277,32 @@ void register_rclcpp_lua(sol::state_view lua) {
   module.set_function("init", []() { rclcpp::init(0, nullptr); });
   module.set_function("shutdown", []() { rclcpp::shutdown(); });
 
-  // module.new_usertype<hardware_interface::RobotHardware>("RobotHardware");
+  module.new_usertype<hardware_interface::RobotHardware>("RobotHardware");
 
-  // module.new_usertype<kuka_rsi_hardware::KukaRsiHardware>(
-  //     "KukaRsiHardware", sol::factories([]() {
-  //       return std::make_shared<kuka_rsi_hardware::KukaRsiHardware>();
-  //     }),
-  //     "init", &kuka_rsi_hardware::KukaRsiHardware::init, "read",
-  //     &kuka_rsi_hardware::KukaRsiHardware::read, "write",
-  //     &kuka_rsi_hardware::KukaRsiHardware::write, sol::base_classes,
-  //     sol::bases<hardware_interface::RobotHardware>());
+  module.new_usertype<kuka_rsi_hardware::KukaRsiHardware>(
+      "KukaRsiHardware", sol::factories([]() {
+        return std::make_shared<kuka_rsi_hardware::KukaRsiHardware>();
+      }),
+      "init", &kuka_rsi_hardware::KukaRsiHardware::init, "read",
+      &kuka_rsi_hardware::KukaRsiHardware::read, "write",
+      &kuka_rsi_hardware::KukaRsiHardware::write, "get_robot_hardware",
+      [](std::shared_ptr<kuka_rsi_hardware::KukaRsiHardware> hw) {
+        return std::static_pointer_cast<hardware_interface::RobotHardware>(hw);
+      });
 
-  // module.new_usertype<controller_manager::ControllerManager>(
-  //     "ControllerManager",
-  //     sol::factories(
-  //         [](std::shared_ptr<hardware_interface::RobotHardware> hw,
-  //            std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor,
-  //            const std::string& name) {
-  //           return std::make_shared<controller_manager::ControllerManager>(
-  //               hw, executor, name);
-  //         }),
-  //     "load_controller",
-  //     &controller_manager::ControllerManager::load_controller, "configure",
-  //     &controller_manager::ControllerManager::configure, "activate",
-  //     &controller_manager::ControllerManager::activate);
+  module.new_usertype<controller_manager::ControllerManager>(
+      "ControllerManager",
+      sol::factories(
+          [](std::shared_ptr<hardware_interface::RobotHardware> hw,
+             std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor,
+             const std::string& name) {
+            return std::make_shared<controller_manager::ControllerManager>(
+                hw, executor, name);
+          }),
+      "load_controller",
+      &controller_manager::ControllerManager::load_controller, "configure",
+      &controller_manager::ControllerManager::configure, "activate",
+      &controller_manager::ControllerManager::activate);
 
   module.new_usertype<test::LifecycleController>(
       "LifecycleController",
@@ -407,10 +409,9 @@ void register_rclcpp_lua(sol::state_view lua) {
       sol::base_classes, sol::bases<rclcpp::Node>());
   module["test"] = test;
 
-
   lua["rclcpp"] = module;
 
   // return module;
-}  
+}
 
 }  // namespace rclcpp_lua

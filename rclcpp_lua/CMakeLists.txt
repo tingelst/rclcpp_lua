@@ -29,6 +29,7 @@ find_package(hardware_interface)
 find_package(kuka_rsi_hw_interface)
 find_package(tinyxml_vendor REQUIRED)
 find_package(TinyXML REQUIRED)
+find_package(hardware_manager)
 
 find_package(Lua 5.3 REQUIRED)
 find_package(sol2 REQUIRED)
@@ -49,6 +50,7 @@ ament_target_dependencies(rclcpp_lua
                           controller_interface
                           controller_manager
                           hardware_interface
+                          hardware_manager
                           kuka_rsi_hw_interface)
 
 # Causes the visibility macros to use dllexport rather than dllimport, which is
@@ -74,6 +76,7 @@ ament_target_dependencies(load_script
                           controller_interface
                           controller_manager
                           hardware_interface
+                          hardware_manager
                           kuka_rsi_hw_interface)
 
 ament_environment_hooks(env_hook/rclcpp_lua.sh.in)

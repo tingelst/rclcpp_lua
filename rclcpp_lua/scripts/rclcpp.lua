@@ -1,20 +1,15 @@
 -- local rclcpp2 = require('librclcpp_lua')
-print(rclcpp)
+-- print(rclcpp)
 
 exec = get_executor()
 
-robot = rclcpp.KukaRsiHardware.new()
-local ret = robot:init()
-print(ret)
 
-robot_manager = get_robot_manager()
-robot_manager:set_robot(robot:get_robot_hardware())
+rm = rclcpp.RobotHardwareManager.new("robot_hardware_manager")
+robot = rm:load_hardware("kuka_rsi_hardware", "kuka_rsi_hardware")
+robot:init()
 
-cm = rclcpp.ControllerManager.new(robot:get_robot_hardware(), exec, "controller_manager")
+cm = rclcpp.ControllerManager.new(robot, exec, "controller_manager")
 cm:load_controller("joint_state_controller", "joint_state_controller")
--- cm:load_controller("test_controller_01", "test_controller")
--- cm:load_controller("etasl_ros2_controllers", "etasl_ros2_controllers::EtaslRos2Controller", "etasl_ros2_controller")
-
 cm:configure()
 cm:activate()
 

@@ -6,6 +6,8 @@
 #include <std_msgs/msg/float64.hpp>
 #include "std_msgs/msg/string.hpp"
 
+#include "hardware_manager/hardware_manager.hpp"
+
 #include "controller_manager/controller_manager.hpp"
 #include "kuka_rsi_hardware/kuka_rsi_hardware.hpp"
 
@@ -277,7 +279,11 @@ void register_rclcpp_lua(sol::state_view lua) {
   module.set_function("init", []() { rclcpp::init(0, nullptr); });
   module.set_function("shutdown", []() { rclcpp::shutdown(); });
 
-  module.new_usertype<hardware_interface::RobotHardware>("RobotHardware");
+  module.new_usertype<hardware_interface::RobotHardware>("RobotHardware", 
+  "init", &hardware_interface::RobotHardware::init,
+  "read", &hardware_interface::RobotHardware::read,
+  "write", &hardware_interface::RobotHardware::write
+  );
 
   module.new_usertype<kuka_rsi_hardware::KukaRsiHardware>(
       "KukaRsiHardware", sol::factories([]() {
@@ -289,6 +295,17 @@ void register_rclcpp_lua(sol::state_view lua) {
       [](std::shared_ptr<kuka_rsi_hardware::KukaRsiHardware> hw) {
         return std::static_pointer_cast<hardware_interface::RobotHardware>(hw);
       });
+
+  module.new_usertype<hardware_manager::RobotHardwareManager>(
+      "RobotHardwareManager",
+      sol::factories(
+          [](
+             const std::string& name) {
+            return std::make_shared<hardware_manager::RobotHardwareManager>(
+                name);
+          }),
+      "load_hardware",
+      &hardware_manager::RobotHardwareManager::load_hardware);
 
   module.new_usertype<controller_manager::ControllerManager>(
       "ControllerManager",

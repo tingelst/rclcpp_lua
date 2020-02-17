@@ -1,3 +1,4 @@
+// Copyright 2020 Norwegian University of Science and Technology
 // Copyright 2020 PAL Robotics SL
 //
 // Licensed under the Apache License, Version 2.0 (the "License");

@@ -1,0 +1,7 @@
+<library path="etasl_controller">
+  <class name="etasl_controller" type="etasl_controller::EtaslController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      EtaslController
+    </description>
+  </class>
+</library>

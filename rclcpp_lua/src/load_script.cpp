@@ -66,9 +66,6 @@ int main(int argc, char* argv[]) {
 
   rclcpp::init(argc, argv);
 
-  auto robot_manager = std::make_shared<RobotManager>();
-  lua.set_function("get_robot_manager", [&]() { return robot_manager; });
-
   auto executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
   lua.set_function("get_executor", [&]() { return executor; });
 
@@ -78,8 +75,7 @@ int main(int argc, char* argv[]) {
       "/home/lars/etasl_ros2_control_ws/install/rclcpp_lua/share/rclcpp_lua/"
       "scripts/rclcpp.lua");
 
-  auto robot = robot_manager->get_robot();
-
+  std::shared_ptr<hardware_interface::RobotHardware> robot = lua["robot"];
   std::shared_ptr<controller_manager::ControllerManager> cm = lua["cm"];
 
   spinner.async_spin();

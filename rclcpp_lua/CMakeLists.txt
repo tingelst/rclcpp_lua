@@ -29,7 +29,8 @@ find_package(hardware_interface)
 find_package(kuka_rsi_hw_interface)
 find_package(tinyxml_vendor REQUIRED)
 find_package(TinyXML REQUIRED)
-find_package(hardware_manager)
+find_package(hardware_manager REQUIRED)
+find_package(etasl_controller REQUIRED)
 
 find_package(Lua 5.3 REQUIRED)
 find_package(sol2 REQUIRED)
@@ -51,7 +52,8 @@ ament_target_dependencies(rclcpp_lua
                           controller_manager
                           hardware_interface
                           hardware_manager
-                          kuka_rsi_hw_interface)
+                          kuka_rsi_hw_interface
+                          etasl_controller)
 
 # Causes the visibility macros to use dllexport rather than dllimport, which is
 # appropriate when building the dll but not consuming it.
@@ -77,7 +79,8 @@ ament_target_dependencies(load_script
                           controller_manager
                           hardware_interface
                           hardware_manager
-                          kuka_rsi_hw_interface)
+                          kuka_rsi_hw_interface
+                          etasl_controller)
 
 ament_environment_hooks(env_hook/rclcpp_lua.sh.in)
 

@@ -17,6 +17,7 @@ find_package(rclcpp_lifecycle REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 add_library(etasl_controller SHARED src/etasl_controller.cpp)
 target_include_directories(etasl_controller PRIVATE include)
@@ -48,7 +49,10 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-ament_export_dependencies(controller_interface rclcpp_lifecycle sensor_msgs)
+ament_export_dependencies("controller_interface"
+                          "std_msgs"
+                          "sensor_msgs"
+                          "geometry_msgs")
 ament_export_include_directories(include)
 ament_export_libraries(etasl_controller)
 ament_package()

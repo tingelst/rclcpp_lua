@@ -284,7 +284,9 @@ void register_rclcpp_lua(sol::state_view lua)
         return std::static_pointer_cast<controller_interface::ControllerInterface>(etasl_controller);
       },
       "add_input_scalar", &etasl_controller::EtaslController::add_input_scalar,
-      "add_output_scalar", &etasl_controller::EtaslController::add_output_scalar
+      "add_output_scalar", &etasl_controller::EtaslController::add_output_scalar,
+      "read_task_specification_string", &etasl_controller::EtaslController::read_task_specification_string,
+      "read_task_specification_file", &etasl_controller::EtaslController::read_task_specification_file
       );
 
   module.new_usertype<kuka_rsi_hardware::KukaRsiHardware>(

@@ -172,13 +172,11 @@ public:
 
   /**
    * reads a task specification file and configures the controller accordingly.
-   * can throw a LuaException()
    */
   void readTaskSpecificationFile(const std::string& filename);
 
   /**
    * reads a task specification string and configures the controller accordingly.
-   * can throw a LuaException()
    */
   void readTaskSpecificationString(const std::string& taskspec);
 

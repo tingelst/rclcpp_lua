@@ -5,6 +5,8 @@
 #include <sol/sol.hpp>
 
 #include "expressiongraph/context.hpp"
+#include "expressiongraph_lua/expressiongraph_lua.hpp"
+#include "expressiongraph_context_lua/expressiongraph_context_lua.hpp"
 
 #include "etasl_driver/visibility_control.h"
 

@@ -75,6 +75,16 @@ void EtaslController::add_output_scalar(const std::string& output_name)
       lifecycle_node_->create_publisher<std_msgs::msg::Float64>("~/" + output_name, rclcpp::SystemDefaultsQoS()));
 }
 
+void EtaslController::read_task_specification_string(const std::string& task_specification)
+{
+  etasl_->readTaskSpecificationString(task_specification);
+}
+
+void EtaslController::read_task_specification_file(const std::string& filename) 
+{
+  etasl_->readTaskSpecificationFile(filename);
+}
+
 bool EtaslController::reset()
 {
   return true;

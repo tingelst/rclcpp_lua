@@ -15,8 +15,19 @@ cm = rclcpp.ControllerManager.new(robot, exec, "controller_manager")
 cm:load_controller("joint_state_controller", "joint_state_controller")
 cm:add_controller(etasl_controller:get_controller_interface(), "etasl_controller")
 
+
+-- etasl_controller:set_joint_names("input_scalar")
 etasl_controller:add_input_scalar("input_scalar")
 etasl_controller:add_output_scalar("output_scalar")
+
+print("main")
+etasl_controller:read_task_specification_string("e = require('expressiongraph')")
+etasl_controller:read_task_specification_string("v = e.Vector(1,2,3)")
+etasl_controller:read_task_specification_string("print(v)")
+etasl_controller:read_task_specification_string("print(ctx)")
+etasl_controller:read_task_specification_string("print(Frame.new(v))")
+etasl_controller:read_task_specification_string("constant = e.constant")
+etasl_controller:read_task_specification_string("print(constant(v))")
 
 
 

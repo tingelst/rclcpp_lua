@@ -73,6 +73,9 @@ public:
   void add_input_scalar(const std::string& input_name);
   void add_output_scalar(const std::string& output_name);
 
+  void read_task_specification_string(const std::string& task_specification);
+  void read_task_specification_file(const std::string& filename);
+
 private:
   bool reset();
   void set_op_mode(const hardware_interface::OperationMode& mode);

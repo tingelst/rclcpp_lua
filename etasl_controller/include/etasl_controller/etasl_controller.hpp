@@ -13,6 +13,8 @@
 #include "hardware_interface/operation_mode_handle.hpp"
 #include "hardware_interface/robot_hardware.hpp"
 
+#include "etasl_driver/etasl_driver.hpp"
+
 #include "kdl/frames.hpp"
 
 #include "geometry_msgs/msg/pose.hpp"
@@ -68,6 +70,9 @@ public:
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
   on_shutdown(const rclcpp_lifecycle::State& previous_state) override;
 
+  void add_input_scalar(const std::string& input_name);
+  void add_output_scalar(const std::string& output_name);
+
 private:
   bool reset();
   void set_op_mode(const hardware_interface::OperationMode& mode);
@@ -81,6 +86,16 @@ private:
   std::vector<hardware_interface::OperationModeHandle*> registered_operation_mode_handles_;
 
   bool is_halted_ = false;
+
+  ScalarMap scalar_input_map_;
+  std::vector<rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr> scalar_subscribers_;
+
+  std::vector<std::string> scalar_output_names_;
+  ScalarMap scalar_output_map_;
+  std::vector<rclcpp_lifecycle::LifecyclePublisher<std_msgs::msg::Float64>::SharedPtr> scalar_publishers_;
+
+  std::shared_ptr<etasl_driver::EtaslDriver> etasl_;
+
 };
 
 }  // namespace etasl_controller

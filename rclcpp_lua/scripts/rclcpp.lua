@@ -13,9 +13,12 @@ etasl_controller = rclcpp.EtaslController.new()
 
 cm = rclcpp.ControllerManager.new(robot, exec, "controller_manager")
 cm:load_controller("joint_state_controller", "joint_state_controller")
--- cm:load_controller("etasl_controller", "etasl_controller")
-
 cm:add_controller(etasl_controller:get_controller_interface(), "etasl_controller")
+
+etasl_controller:add_input_scalar("input_scalar")
+etasl_controller:add_output_scalar("output_scalar")
+
+
 
 cm:configure()
 cm:activate()

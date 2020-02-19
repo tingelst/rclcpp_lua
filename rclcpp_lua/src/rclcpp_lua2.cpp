@@ -279,9 +279,13 @@ void register_rclcpp_lua(sol::state_view lua)
 
   module.new_usertype<etasl_controller::EtaslController>(
       "EtaslController", sol::factories([]() { return std::make_shared<etasl_controller::EtaslController>(); }),
-      "get_controller_interface", [](std::shared_ptr<etasl_controller::EtaslController> etasl_controller) {
+      "get_controller_interface",
+      [](std::shared_ptr<etasl_controller::EtaslController> etasl_controller) {
         return std::static_pointer_cast<controller_interface::ControllerInterface>(etasl_controller);
-      });
+      },
+      "add_input_scalar", &etasl_controller::EtaslController::add_input_scalar,
+      "add_output_scalar", &etasl_controller::EtaslController::add_output_scalar
+      );
 
   module.new_usertype<kuka_rsi_hardware::KukaRsiHardware>(
       "KukaRsiHardware", sol::factories([]() { return std::make_shared<kuka_rsi_hardware::KukaRsiHardware>(); }),

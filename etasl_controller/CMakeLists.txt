@@ -18,9 +18,14 @@ find_package(rcutils REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(etasl_driver REQUIRED)
+
+find_package(Lua 5.3 REQUIRED)
+find_package(sol2 REQUIRED)
 
 add_library(etasl_controller SHARED src/etasl_controller.cpp)
-target_include_directories(etasl_controller PRIVATE include)
+target_include_directories(etasl_controller PRIVATE include ${LUA_INCLUDE_DIR})
+target_link_libraries(etasl_controller sol2::sol2 ${LUA_LIBRARIES})
 
 ament_target_dependencies(etasl_controller
                           "builtin_interfaces"
@@ -28,7 +33,8 @@ ament_target_dependencies(etasl_controller
                           "pluginlib"
                           "rclcpp_lifecycle"
                           "rcutils"
-                          "sensor_msgs")
+                          "sensor_msgs"
+                          "etasl_driver")
 # Causes the visibility macros to use dllexport rather than dllimport, which is
 # appropriate when building the dll but not consuming it.
 target_compile_definitions(etasl_controller PRIVATE
@@ -52,7 +58,8 @@ endif()
 ament_export_dependencies("controller_interface"
                           "std_msgs"
                           "sensor_msgs"
-                          "geometry_msgs")
+                          "geometry_msgs"
+                          "etasl_driver")
 ament_export_include_directories(include)
 ament_export_libraries(etasl_controller)
 ament_package()

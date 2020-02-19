@@ -55,7 +55,6 @@ int main(int argc, char* argv[]) {
 
   sol::state lua;
   lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::string);
-
   rclcpp_lua::register_rclcpp_lua(lua);
 
   lua.new_usertype<RobotManager>("RobotManager", sol::factories([]() {

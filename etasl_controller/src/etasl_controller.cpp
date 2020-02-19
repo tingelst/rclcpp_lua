@@ -2,7 +2,8 @@
 
 namespace etasl_controller
 {
-EtaslController::EtaslController()
+EtaslController::EtaslController() 
+: etasl_(std::make_shared<etasl_driver::EtaslDriver>(300, 0.0, 0.001))
 {
 }
 
@@ -56,6 +57,22 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 EtaslController::on_shutdown(const rclcpp_lifecycle::State& previous_state)
 {
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
+void EtaslController::add_input_scalar(const std::string& input_name)
+{
+  auto callback = [this, input_name](std_msgs::msg::Float64::UniquePtr msg) {
+    scalar_input_map_["global." + input_name] = msg->data;
+  };
+  scalar_subscribers_.push_back(lifecycle_node_->create_subscription<std_msgs::msg::Float64>(
+      "~/" + input_name, rclcpp::SystemDefaultsQoS(), callback));
+}
+
+void EtaslController::add_output_scalar(const std::string& output_name)
+{
+  scalar_output_names_.push_back(output_name);
+  scalar_publishers_.push_back(
+      lifecycle_node_->create_publisher<std_msgs::msg::Float64>("~/" + output_name, rclcpp::SystemDefaultsQoS()));
 }
 
 bool EtaslController::reset()

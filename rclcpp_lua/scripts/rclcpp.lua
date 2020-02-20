@@ -20,15 +20,19 @@ cm:add_controller(etasl_controller:get_controller_interface(), "etasl_controller
 etasl_controller:add_input_scalar("input_scalar")
 etasl_controller:add_output_scalar("output_scalar")
 
-print("main")
-etasl_controller:read_task_specification_string("e = require('expressiongraph')")
-etasl_controller:read_task_specification_string("v = e.Vector(1,2,3)")
-etasl_controller:read_task_specification_string("print(v)")
-etasl_controller:read_task_specification_string("print(ctx)")
-etasl_controller:read_task_specification_string("print(Frame.new(v))")
-etasl_controller:read_task_specification_string("constant = e.constant")
-etasl_controller:read_task_specification_string("print(constant(v))")
+etasl_controller:read_task_specification_string("require('expressiongraph')")
 
+-- etasl_controller:read_task_specification_string("v = e.Vector(1,2,3)")
+-- etasl_controller:read_task_specification_string("print(v)")
+-- etasl_controller:read_task_specification_string("print(ctx)")
+-- etasl_controller:read_task_specification_string("print(Frame.new(v))")
+-- etasl_controller:read_task_specification_string("constant = e.constant")
+-- etasl_controller:read_task_specification_string("print(constant(v))")
+
+
+etasl_controller:read_task_specification_string("print(Vector(1,2,3))")
+
+etasl_controller:read_task_specification_file('/home/lars/etasl_ros2_control_ws/src/rclcpp_lua/etasl_controller/scripts/task_spec.lua')
 
 
 cm:configure()

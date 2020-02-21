@@ -30,7 +30,7 @@ etasl_controller:read_task_specification_string("require('expressiongraph')")
 -- etasl_controller:read_task_specification_string("print(constant(v))")
 
 
-etasl_controller:read_task_specification_string("print(Vector(1,2,3))")
+-- etasl_controller:read_task_specification_string("print(Vector(1,2,3))")
 
 etasl_controller:read_task_specification_file('/home/lars/etasl_ros2_control_ws/src/rclcpp_lua/etasl_controller/scripts/task_spec.lua')
 

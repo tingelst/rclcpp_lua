@@ -16,23 +16,8 @@ cm:load_controller("joint_state_controller", "joint_state_controller")
 cm:add_controller(etasl_controller:get_controller_interface(), "etasl_controller")
 
 etasl_controller:set_joint_names({'joint_a1', 'joint_a2', 'joint_a3', 'joint_a4', 'joint_a5', 'joint_a6'})
-
--- etasl_controller:set_joint_names("input_scalar")
 etasl_controller:add_input_scalar("input_scalar")
 etasl_controller:add_output_scalar("output_scalar")
-
-etasl_controller:read_task_specification_string("require('expressiongraph')")
-
--- etasl_controller:read_task_specification_string("v = e.Vector(1,2,3)")
--- etasl_controller:read_task_specification_string("print(v)")
--- etasl_controller:read_task_specification_string("print(ctx)")
--- etasl_controller:read_task_specification_string("print(Frame.new(v))")
--- etasl_controller:read_task_specification_string("constant = e.constant")
--- etasl_controller:read_task_specification_string("print(constant(v))")
-
-
--- etasl_controller:read_task_specification_string("print(Vector(1,2,3))")
-
 etasl_controller:read_task_specification_file('/home/lars/etasl_ros2_control_ws/src/rclcpp_lua/etasl_controller/scripts/task_spec.lua')
 
 

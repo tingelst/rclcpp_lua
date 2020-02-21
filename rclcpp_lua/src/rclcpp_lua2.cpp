@@ -285,9 +285,9 @@ void register_rclcpp_lua(sol::state_view lua)
       },
       "set_joint_names",
       [](std::shared_ptr<etasl_controller::EtaslController> etasl_controller, sol::table joint_names_table) {
-        // etasl_controller->set_joint_names(joint_names_table.as<std::vector<std::string>>());
+        etasl_controller->set_joint_names(joint_names_table.as<std::vector<std::string>>());
       },
-      "add_input"
+      "add_input_scalar",
       &etasl_controller::EtaslController::add_input_scalar, "add_output_scalar",
       &etasl_controller::EtaslController::add_output_scalar, "read_task_specification_string",
       &etasl_controller::EtaslController::read_task_specification_string, "read_task_specification_file",
@@ -305,7 +305,7 @@ void register_rclcpp_lua(sol::state_view lua)
       "RobotHardwareManager", sol::factories([](const std::string& name) {
         return std::make_shared<hardware_manager::RobotHardwareManager>(name);
       }),
-      "load_hardware", &hardware_manager::RobotHardwareManager::load_hardware);a
+      "load_hardware", &hardware_manager::RobotHardwareManager::load_hardware);
 
   module.new_usertype<controller_manager::ControllerManager>(
       "ControllerManager",

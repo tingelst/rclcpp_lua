@@ -19,6 +19,38 @@ controller_interface::controller_interface_ret_t EtaslController::init(
 
 controller_interface::controller_interface_ret_t EtaslController::update()
 {
+  etasl_->setInput(scalar_input_map_);
+
+  std::map<std::string, double> joint_position_map;
+  for (size_t i = 0; i < joint_names_.size(); ++i)
+  {
+    joint_position_map[joint_names_[i]] = registered_joint_state_handles_[i]->get_position();
+  }
+  etasl_->setJointPos(joint_position_map);
+
+  // Solve the optimization problem
+  etasl_->updateStep(0.01);
+  // Set the desired joint positions
+  etasl_->getJointPos(joint_position_map);
+
+  for (size_t i = 0; i < joint_names_.size(); ++i)
+  {
+    registered_joint_cmd_handles_[i]->set_cmd(joint_position_map[joint_names_[i]]);
+  }
+
+  if (!scalar_publishers_.empty())
+  {
+    etasl_->getOutput(scalar_output_map_);
+    for (size_t index = 0; index < scalar_publishers_.size(); ++index)
+    {
+      auto msg = std_msgs::msg::Float64();
+      msg.data = scalar_output_map_["global." + scalar_output_names_[index]];
+      scalar_publishers_[index]->publish(msg);
+    }
+  }
+
+  set_op_mode(hardware_interface::OperationMode::ACTIVE);
+
   return controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS;
 }
 
@@ -85,6 +117,29 @@ EtaslController::on_configure(const rclcpp_lifecycle::State& previous_state)
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 EtaslController::on_activate(const rclcpp_lifecycle::State& previous_state)
 {
+  (void)previous_state;
+
+  std::map<std::string, double> joint_position_map;
+  for (size_t i = 0; i < joint_names_.size(); ++i)
+  {
+    joint_position_map[joint_names_[i]] = registered_joint_state_handles_[i]->get_position();
+  }
+
+  std::map<std::string, double> converged_values_map;
+  if (etasl_->initialize(joint_position_map, 10.0, 0.004, 1E-4, converged_values_map) < 0)
+  {
+    RCLCPP_ERROR(lifecycle_node_->get_logger(), "Could not initialize the eTaSl solver");
+  }
+
+  // Activate all scalar publishers
+  for (auto pub : scalar_publishers_)
+  {
+    pub->on_activate();
+  }
+
+  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+
+
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 

@@ -89,7 +89,7 @@ end
 local meas = j1
 local model = j1
 local controller = 'proportional'
-local target = 0.5
+local target = 1.23456
 local priority = 2
 local K = constant(4)
 

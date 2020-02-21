@@ -11,4 +11,3 @@ fi
 export LUA_CPATH="$LUA_CPATH;@CMAKE_INSTALL_PREFIX@/lib/?.so"
                                                                       
 export PATH="$PATH:@CMAKE_INSTALL_PREFIX@/share/scripts"
-

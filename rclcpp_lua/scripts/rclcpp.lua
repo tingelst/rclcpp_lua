@@ -15,6 +15,7 @@ cm = rclcpp.ControllerManager.new(robot, exec, "controller_manager")
 cm:load_controller("joint_state_controller", "joint_state_controller")
 cm:add_controller(etasl_controller:get_controller_interface(), "etasl_controller")
 
+etasl_controller:set_joint_names({'joint_a1', 'joint_a2', 'joint_a3', 'joint_a4', 'joint_a5', 'joint_a6'})
 
 -- etasl_controller:set_joint_names("input_scalar")
 etasl_controller:add_input_scalar("input_scalar")

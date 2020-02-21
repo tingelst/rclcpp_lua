@@ -2,8 +2,7 @@
 
 namespace etasl_controller
 {
-EtaslController::EtaslController() 
-: etasl_(std::make_shared<etasl_driver::EtaslDriver>(300, 0.0, 0.001))
+EtaslController::EtaslController() : etasl_(std::make_shared<etasl_driver::EtaslDriver>(300, 0.0, 0.001))
 {
 }
 
@@ -26,6 +25,60 @@ controller_interface::controller_interface_ret_t EtaslController::update()
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 EtaslController::on_configure(const rclcpp_lifecycle::State& previous_state)
 {
+  (void)previous_state;
+
+  auto logger = lifecycle_node_->get_logger();
+
+  if (auto robot_hardware = robot_hardware_.lock())
+  {
+    if (joint_names_.empty())
+    {
+      RCLCPP_WARN(logger, "no joint names specified");
+      return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
+    }
+
+    // register handles
+    registered_joint_state_handles_.resize(joint_names_.size());
+    for (size_t index = 0; index < joint_names_.size(); ++index)
+    {
+      auto ret =
+          robot_hardware->get_joint_state_handle(joint_names_[index].c_str(), &registered_joint_state_handles_[index]);
+      if (ret != hardware_interface::HW_RET_OK)
+      {
+        RCLCPP_WARN(logger, "unable to obtain joint state handle for %s", joint_names_[index].c_str());
+        return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
+      }
+    }
+    registered_joint_cmd_handles_.resize(joint_names_.size());
+    for (size_t index = 0; index < joint_names_.size(); ++index)
+    {
+      auto ret =
+          robot_hardware->get_joint_command_handle(joint_names_[index].c_str(), &registered_joint_cmd_handles_[index]);
+      if (ret != hardware_interface::HW_RET_OK)
+      {
+        RCLCPP_WARN(logger, "unable to obtain joint command handle for %s", joint_names_[index].c_str());
+        return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
+      }
+    }
+    registered_operation_mode_handles_.resize(write_op_names_.size());
+    for (size_t index = 0; index < write_op_names_.size(); ++index)
+    {
+      auto ret = robot_hardware->get_operation_mode_handle(write_op_names_[index].c_str(),
+                                                           &registered_operation_mode_handles_[index]);
+      if (ret != hardware_interface::HW_RET_OK)
+      {
+        RCLCPP_WARN(logger, "unable to obtain operation mode handle for %s", write_op_names_[index].c_str());
+        return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
+      }
+    }
+  }
+  else
+  {
+    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
+  }
+
+  set_op_mode(hardware_interface::OperationMode::INACTIVE);
+
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
@@ -59,6 +112,11 @@ EtaslController::on_shutdown(const rclcpp_lifecycle::State& previous_state)
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
+void EtaslController::set_joint_names(const std::vector<std::string>& joint_names)
+{
+  joint_names_ = joint_names;
+}
+
 void EtaslController::add_input_scalar(const std::string& input_name)
 {
   auto callback = [this, input_name](std_msgs::msg::Float64::UniquePtr msg) {
@@ -80,7 +138,7 @@ void EtaslController::read_task_specification_string(const std::string& task_spe
   etasl_->readTaskSpecificationString(task_specification);
 }
 
-void EtaslController::read_task_specification_file(const std::string& filename) 
+void EtaslController::read_task_specification_file(const std::string& filename)
 {
   etasl_->readTaskSpecificationFile(filename);
 }

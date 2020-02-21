@@ -75,11 +75,14 @@ public:
 
   void read_task_specification_string(const std::string& task_specification);
   void read_task_specification_file(const std::string& filename);
+  
+  void set_joint_names(const std::vector<std::string>& joint_names);
 
 private:
   bool reset();
   void set_op_mode(const hardware_interface::OperationMode& mode);
   void halt();
+
 
   std::vector<std::string> joint_names_;
   std::vector<std::string> write_op_names_;
@@ -98,7 +101,6 @@ private:
   std::vector<rclcpp_lifecycle::LifecyclePublisher<std_msgs::msg::Float64>::SharedPtr> scalar_publishers_;
 
   std::shared_ptr<etasl_driver::EtaslDriver> etasl_;
-
 };
 
 }  // namespace etasl_controller

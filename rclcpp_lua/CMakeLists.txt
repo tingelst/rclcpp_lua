@@ -93,7 +93,7 @@ install(TARGETS rclcpp_lua
         RUNTIME DESTINATION bin)
 
 install(TARGETS load_script DESTINATION lib/${PROJECT_NAME})
-install(DIRECTORY scripts DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY scripts/ DESTINATION share/scripts)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

@@ -54,7 +54,8 @@ int main(int argc, char* argv[]) {
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
   sol::state lua;
-  lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::string);
+  lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::table, sol::lib::math, sol::lib::os);
+
   rclcpp_lua::register_rclcpp_lua(lua);
 
   lua.new_usertype<RobotManager>("RobotManager", sol::factories([]() {
@@ -71,7 +72,7 @@ int main(int argc, char* argv[]) {
   auto spinner = AsyncSpinner(executor);
 
   lua.script_file(
-      "/home/lars/etasl_ros2_control_ws/install/rclcpp_lua/share/rclcpp_lua/"
+      "/home/lars/etasl_ros2_control_ws/install/rclcpp_lua/share/"
       "scripts/rclcpp.lua");
 
   std::shared_ptr<hardware_interface::RobotHardware> robot = lua["robot"];
@@ -79,24 +80,25 @@ int main(int argc, char* argv[]) {
 
   spinner.async_spin();
 
+  auto handle = std::async(std::launch::async, [&](){
   rclcpp::Rate r(100);
   hardware_interface::hardware_interface_ret_t ret;
   while (rclcpp::ok()) {
     ret = robot->read();
-
     if (ret != hardware_interface::HW_RET_OK) {
       fprintf(stderr, "read failed!\n");
     }
-
     cm->update();
-
     ret = robot->write();
     if (ret != hardware_interface::HW_RET_OK) {
       fprintf(stderr, "write failed!\n");
     }
-
     r.sleep();
   }
+  });
+
+  // Drop to interactive prompt
+  lua.script("require('luap')");
 
   executor->cancel();
 

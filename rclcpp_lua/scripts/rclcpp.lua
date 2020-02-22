@@ -24,8 +24,6 @@ etasl_controller:read_task_specification_file('/home/lars/etasl_ros2_control_ws/
 cm:configure()
 cm:activate()
 
-local prompt = require('luap')
-
 -- local options = rclcpp.NodeOptions.new()
 
 -- -- local talker = loader:load_library('/opt/ros/eloquent/lib/libtalker_component.so', 'composition::Talker', options)

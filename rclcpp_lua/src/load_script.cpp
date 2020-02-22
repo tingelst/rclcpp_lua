@@ -98,7 +98,14 @@ int main(int argc, char* argv[]) {
   });
 
   // Drop to interactive prompt
-  lua.script("require('luap')");
+  lua.script(R"(
+local prompt = require "prompt"
+prompt.name = 'etasl_controller'
+prompt.prompts = {'etasl_controller >  ', 'etasl_controller >> '}
+prompt.colorize = true
+prompt.history = os.getenv('HOME') .. '/.lua_history'
+prompt.enter()
+  )");
 
   executor->cancel();
 

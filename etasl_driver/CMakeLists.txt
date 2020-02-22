@@ -24,6 +24,7 @@ find_package(expressiongraph_context REQUIRED)
 find_package(expressiongraph_context_lua REQUIRED)
 find_package(expressiongraph_solver_qpoases REQUIRED)
 
+
 find_package(Lua 5.3 REQUIRED)
 find_package(sol2 REQUIRED)
 
@@ -41,7 +42,8 @@ ament_target_dependencies(${PROJECT_NAME}
                           "expressiongraph"
                           "expressiongraph_context"
                           "expressiongraph_context_lua"
-                          "expressiongraph_solver_qpoases")
+                          "expressiongraph_solver_qpoases"
+                          )
 
 # Causes the visibility macros to use dllexport rather than dllimport, which is
 # appropriate when building the dll but not consuming it.

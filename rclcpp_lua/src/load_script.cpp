@@ -8,6 +8,9 @@
 #include "controller_manager/controller_manager.hpp"
 #include "hardware_interface/robot_hardware.hpp"
 
+#include "luaprompt/prompt.h"
+
+
 #include "rclcpp_lua/rclcpp_lua.hpp"
 
 #include "rclcpp_lua/visibility_control.h"
@@ -64,6 +67,11 @@ int main(int argc, char* argv[]) {
                                  "set_robot", &RobotManager::set_robot,
                                  "get_robot", &RobotManager::get_robot);
 
+  lua.set_function("open_prompt", [](sol::this_state s){
+		lua_State* L = s; // current state
+    luap_enter(L);
+  });
+
   rclcpp::init(argc, argv);
 
   auto executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
@@ -97,15 +105,7 @@ int main(int argc, char* argv[]) {
   }
   });
 
-  // Drop to interactive prompt
-  lua.script(R"(
-local prompt = require "prompt"
-prompt.name = 'etasl_controller'
-prompt.prompts = {'etasl_controller >  ', 'etasl_controller >> '}
-prompt.colorize = true
-prompt.history = os.getenv('HOME') .. '/.lua_history'
-prompt.enter()
-  )");
+  lua.script("open_prompt()");
 
   executor->cancel();
 

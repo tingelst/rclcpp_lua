@@ -78,6 +78,8 @@ public:
   
   void set_joint_names(const std::vector<std::string>& joint_names);
 
+  void console();
+
 private:
   bool reset();
   void set_op_mode(const hardware_interface::OperationMode& mode);

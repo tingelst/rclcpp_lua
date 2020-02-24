@@ -180,6 +180,9 @@ public:
    */
   void readTaskSpecificationString(const std::string& taskspec);
 
+  /// Open a console
+  void console();
+
   /**
    * Performs the following tasks in this order:
    *  1) prepares the solver for the initialization problem

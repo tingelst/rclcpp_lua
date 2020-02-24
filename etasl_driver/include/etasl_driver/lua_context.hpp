@@ -21,6 +21,7 @@ public:
 
   int executeString(const std::string& cmds);
   int executeFile(const std::string& filename);
+  int console();
 
 private:
   std::shared_ptr<Context> ctx_;

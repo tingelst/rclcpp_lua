@@ -103,6 +103,11 @@ int EtaslDriver::setInput(const DoubleMap& dmap)
   return 0;
 }
 
+void EtaslDriver::console()
+{
+  lua_->console();
+}
+
 int EtaslDriver::setInput(const FrameMap& fmap)
 {
   for (auto item : fmap)

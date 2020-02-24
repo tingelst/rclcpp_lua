@@ -287,11 +287,11 @@ void register_rclcpp_lua(sol::state_view lua)
       [](std::shared_ptr<etasl_controller::EtaslController> etasl_controller, sol::table joint_names_table) {
         etasl_controller->set_joint_names(joint_names_table.as<std::vector<std::string>>());
       },
-      "add_input_scalar",
-      &etasl_controller::EtaslController::add_input_scalar, "add_output_scalar",
+      "add_input_scalar", &etasl_controller::EtaslController::add_input_scalar, "add_output_scalar",
       &etasl_controller::EtaslController::add_output_scalar, "read_task_specification_string",
       &etasl_controller::EtaslController::read_task_specification_string, "read_task_specification_file",
-      &etasl_controller::EtaslController::read_task_specification_file);
+      &etasl_controller::EtaslController::read_task_specification_file, "console",
+      &etasl_controller::EtaslController::console);
 
   module.new_usertype<kuka_rsi_hardware::KukaRsiHardware>(
       "KukaRsiHardware", sol::factories([]() { return std::make_shared<kuka_rsi_hardware::KukaRsiHardware>(); }),

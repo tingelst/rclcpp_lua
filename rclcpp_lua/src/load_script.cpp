@@ -10,23 +10,24 @@
 
 #include "luaprompt/prompt.h"
 
-
 #include "rclcpp_lua/rclcpp_lua.hpp"
 
 #include "rclcpp_lua/visibility_control.h"
 
-class AsyncSpinner {
- public:
-  explicit AsyncSpinner(
-      std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor)
-      : executor_(executor) {}
-  void async_spin() {
+class AsyncSpinner
+{
+public:
+  explicit AsyncSpinner(std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor) : executor_(executor)
+  {
+  }
+  void async_spin()
+  {
     handle_ = std::async(std::launch::async, spin, executor_);
   }
 
- private:
-  static void spin(
-      std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> exe) {
+private:
+  static void spin(std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> exe)
+  {
     exe->spin();
   }
 
@@ -34,43 +35,41 @@ class AsyncSpinner {
   std::future<void> handle_;
 };
 
-class RobotManager {
- public:
-  void set_robot(std::shared_ptr<hardware_interface::RobotHardware> robot) {
+class RobotManager
+{
+public:
+  void set_robot(std::shared_ptr<hardware_interface::RobotHardware> robot)
+  {
     std::cout << "Setting robot" << std::endl;
     robot_ = robot;
   }
 
-  std::shared_ptr<hardware_interface::RobotHardware> get_robot() {
+  std::shared_ptr<hardware_interface::RobotHardware> get_robot()
+  {
     return robot_;
   }
 
- private:
+private:
   std::shared_ptr<hardware_interface::RobotHardware> robot_;
 };
 
-namespace rclcpp_lua {
+namespace rclcpp_lua
+{
 void register_rclcpp_lua(sol::state_view L);
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
   sol::state lua;
-  lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::table, sol::lib::math, sol::lib::os);
+  lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::table, sol::lib::math,
+                     sol::lib::os);
 
   rclcpp_lua::register_rclcpp_lua(lua);
 
-  lua.new_usertype<RobotManager>("RobotManager", sol::factories([]() {
-                                   return std::make_shared<RobotManager>();
-                                 }),
-                                 "set_robot", &RobotManager::set_robot,
-                                 "get_robot", &RobotManager::get_robot);
-
-  lua.set_function("open_prompt", [](sol::this_state s){
-		lua_State* L = s; // current state
-    luap_enter(L);
-  });
+  lua.new_usertype<RobotManager>("RobotManager", sol::factories([]() { return std::make_shared<RobotManager>(); }),
+                                 "set_robot", &RobotManager::set_robot, "get_robot", &RobotManager::get_robot);
 
   rclcpp::init(argc, argv);
 
@@ -79,33 +78,39 @@ int main(int argc, char* argv[]) {
 
   auto spinner = AsyncSpinner(executor);
 
-  lua.script_file(
-      "/home/lars/etasl_ros2_control_ws/install/rclcpp_lua/share/"
-      "scripts/rclcpp.lua");
+  lua.script_file("/home/lars/etasl_ros2_control_ws/install/rclcpp_lua/share/"
+                  "scripts/rclcpp.lua");
 
   std::shared_ptr<hardware_interface::RobotHardware> robot = lua["robot"];
   std::shared_ptr<controller_manager::ControllerManager> cm = lua["cm"];
 
   spinner.async_spin();
 
-  auto handle = std::async(std::launch::async, [&](){
-  rclcpp::Rate r(100);
-  hardware_interface::hardware_interface_ret_t ret;
-  while (rclcpp::ok()) {
-    ret = robot->read();
-    if (ret != hardware_interface::HW_RET_OK) {
-      fprintf(stderr, "read failed!\n");
+  auto handle = std::async(std::launch::async, [&]() {
+    rclcpp::Rate r(100);
+    hardware_interface::hardware_interface_ret_t ret;
+    while (rclcpp::ok())
+    {
+      ret = robot->read();
+      if (ret != hardware_interface::HW_RET_OK)
+      {
+        fprintf(stderr, "read failed!\n");
+      }
+      cm->update();
+      ret = robot->write();
+      if (ret != hardware_interface::HW_RET_OK)
+      {
+        fprintf(stderr, "write failed!\n");
+      }
+      r.sleep();
     }
-    cm->update();
-    ret = robot->write();
-    if (ret != hardware_interface::HW_RET_OK) {
-      fprintf(stderr, "write failed!\n");
-    }
-    r.sleep();
-  }
   });
 
-  lua.script("open_prompt()");
+  lua.script(R"(
+local prompt = require('libprompt')
+prompt.name = 'etasl'
+prompt.enter()
+  )");
 
   executor->cancel();
 

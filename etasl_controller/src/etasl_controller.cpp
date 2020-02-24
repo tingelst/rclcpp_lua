@@ -172,6 +172,11 @@ void EtaslController::set_joint_names(const std::vector<std::string>& joint_name
   joint_names_ = joint_names;
 }
 
+void EtaslController::console()
+{
+    return etasl_->console();
+}
+
 void EtaslController::add_input_scalar(const std::string& input_name)
 {
   auto callback = [this, input_name](std_msgs::msg::Float64::UniquePtr msg) {

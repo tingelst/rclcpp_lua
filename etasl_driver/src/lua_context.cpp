@@ -4,7 +4,8 @@ namespace etasl_driver
 {
 LuaContext::LuaContext(std::shared_ptr<Context> ctx) : ctx_(ctx)
 {
-  lua_.open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::table, sol::lib::math, sol::lib::os);
+  lua_.open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::table, sol::lib::math,
+                      sol::lib::os);
 
   expressiongraph_lua::register_kdl(lua_);
   expressiongraph_context_lua::register_context(lua_);
@@ -41,6 +42,16 @@ int LuaContext::executeFile(const std::string& filename)
   {
     return 0;
   }
+}
+
+int LuaContext::console()
+{
+  lua_.script(R"(
+    local prompt = require('libprompt')
+    prompt.colorize = true
+    prompt.name = 'ctx' 
+    prompt.enter()
+  )");
 }
 
 }  // namespace etasl_driver

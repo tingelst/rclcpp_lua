@@ -109,6 +109,7 @@ int main(int argc, char* argv[])
   lua.script(R"(
 local prompt = require('libprompt')
 prompt.name = 'etasl'
+prompt.prompts = {"etasl > ", "etasl >>  "}
 prompt.enter()
   )");
 

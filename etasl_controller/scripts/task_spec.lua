@@ -8,7 +8,7 @@ u:addTransform("ee", "tool0", "base_link")
 
 local r = u:getExpressions(ctx)
 
-print(r.ee)
+-- print(r.ee)
 
 -- The transformation of the robot mounting plate frame with respect to the robot base frame
 robot_ee = r.ee
@@ -85,15 +85,16 @@ end
 -- }
 
 -- deg2rad = math.pi / 180.0
+tgt1 = ctx:createInputChannelScalar("tgt1", 1.23456)
+
+
 
 local meas = j1
 local model = j1
 local controller = 'proportional'
-local target = 1.23456
+target = 0
 local priority = 2
 local K = constant(4)
-
-
 ctx:addInequalityConstraint('c1', model, meas, target, target, controller, controller, 2, K)
 
-print(ctx)
+-- print(ctx)

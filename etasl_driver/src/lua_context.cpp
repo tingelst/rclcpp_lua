@@ -50,6 +50,7 @@ int LuaContext::console()
     local prompt = require('libprompt')
     prompt.colorize = true
     prompt.name = 'ctx' 
+    prompt.prompts = {"ctx > ", "ctx >>  "}
     prompt.enter()
   )");
 }

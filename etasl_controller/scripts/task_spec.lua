@@ -6,6 +6,7 @@ u:readFromFile(
     "/home/lars/etasl_ros2_control_ws/install/kuka_kr6_support/share/kuka_kr6_support/urdf/kr6r900sixx.urdf")
 u:addTransform("ee", "tool0", "base_link")
 
+
 local r = u:getExpressions(ctx)
 
 -- print(r.ee)
@@ -23,6 +24,15 @@ j3 = ctx:getScalarExpr(robot_joints[3])
 j4 = ctx:getScalarExpr(robot_joints[4])
 j5 = ctx:getScalarExpr(robot_joints[5])
 j6 = ctx:getScalarExpr(robot_joints[6])
+
+unames = u:getAllJointNames()
+print(unames)
+
+print(u:getAllJointExpressions())
+
+print(u.poslimits)
+u.poslimits = false
+print(u.poslimits)
 
 function BoxConstraint(arg)
     local HUGE_VALUE = 1E20
@@ -95,6 +105,18 @@ local controller = 'proportional'
 target = 0
 local priority = 2
 local K = constant(4)
-ctx:addInequalityConstraint('c1', model, meas, target, target, controller, controller, 2, K)
+-- ctx:addInequalityConstraint('c1', model, meas, target, target, controller, controller, 2, K)
 
--- print(ctx)
+ctx:addConstraint('c2', j2 + constant(1.2345), 4, 1, 2)
+ctx:addInequalityConstraint('c3', j3, 0.0, 4, 1.234, 4, 1.0, 2)
+
+
+-- inline int addInequalityConstraint(Context::Ptr            ctx,
+--                                    const std::string&      name,
+--                                    Expression<double>::Ptr expr,
+--                                    double                  target_lower,
+--                                    double                  K_lower,
+--                                    double                  target_upper,
+--                                    double                  K_upper,
+--                                    double                  weight,
+--                                    int                     priority) {

@@ -5,6 +5,7 @@ exec = get_executor()
 
 
 rm = rclcpp.RobotHardwareManager.new("robot_hardware_manager")
+
 robot = rm:load_hardware("kuka_rsi_hardware", "kuka_rsi_hardware")
 robot:init()
 
@@ -18,7 +19,7 @@ cm:add_controller(etasl_controller:get_controller_interface(), "etasl_controller
 etasl_controller:set_joint_names({'joint_a1', 'joint_a2', 'joint_a3', 'joint_a4', 'joint_a5', 'joint_a6'})
 etasl_controller:add_input_scalar("input_scalar")
 etasl_controller:add_output_scalar("output_scalar")
-etasl_controller:read_task_specification_file('/home/lars/etasl_ros2_control_ws/src/rclcpp_lua/etasl_controller/scripts/task_spec.lua')
+etasl_controller:read_task_specification_file('/home/lars/etasl_ros2_control_ws/src/rclcpp_lua/etasl_controller/scripts/task_spec2  .lua')
 
 
 cm:configure()

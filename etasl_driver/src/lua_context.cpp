@@ -10,8 +10,8 @@ LuaContext::LuaContext(std::shared_ptr<Context> ctx) : ctx_(ctx)
   expressiongraph_lua::register_kdl(lua_);
   expressiongraph_context_lua::register_context(lua_);
 
-  lua_["time"] = ctx->getScalarExpr("time");
-  lua_["ctx"] = ctx_;
+  lua_["__time"] = ctx_->getScalarExpr("time");
+  lua_["__ctx"] = ctx_;
 }
 
 int LuaContext::executeString(const std::string& cmds)
